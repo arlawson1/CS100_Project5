@@ -1,0 +1,184 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "ppm.h"
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+ppmPic *readPic(char *fileName) {
+	// Scan files from the argv[2] file;
+	ppmPic *myPic = malloc(sizeof(ppmPic));
+	FILE *fp = fopen(fileName,"r");
+	char dummy[5];
+	fscanf(fp, "%s", dummy);
+	fscanf(fp, "%d %d %d", &myPic->cols, &myPic->rows, &myPic->colors);
+	myPic->pixels = malloc(sizeof(Pixel *) * myPic->rows);
+	for(int i = 0; i < myPic->rows; i++){
+		myPic->pixels[i] = malloc(sizeof(Pixel) * myPic->cols);
+	}
+
+	for(int a = 0; a < myPic->rows; a++){
+		for(int b = 0; b < myPic->cols; b++){
+			fscanf(fp, "%d %d %d", &myPic->pixels[a][b].red, &myPic->pixels[a][b].green, &myPic->pixels[a][b].blue);
+		}
+	}
+	fclose(fp);
+	return myPic;
+}
+//fixed
+void writePic(ppmPic *myPic, char *fileName) {
+	// write the files from readPic to a new struct and add -NEW.ppm to the name of the file
+	int len = strlen(fileName);
+	char newFile[50];
+	strcpy(newFile,fileName);
+	newFile[len - 4] = '\0';
+	strcat(newFile, "-NEW.ppm");
+
+	FILE* fp2 = fopen(newFile, "w");
+	fprintf(fp2, "P3\n");
+	fprintf(fp2, "%d %d %d\n", myPic->cols, myPic->rows, myPic->colors);
+	for(int a = 0; a < myPic->rows; a++){
+		for(int b = 0; b < myPic->cols; b++){
+			fprintf(fp2, "%d %d %d     ", myPic->pixels[a][b].red, myPic->pixels[a][b].green, myPic->pixels[a][b].blue);
+		}
+		fprintf(fp2,"\n");
+	}
+	fclose(fp2);
+	return;
+}
+//fixed
+ppmPic *rotateLeft(ppmPic *thePic) {
+	// reverse dimension sizes and 0,0 becomes 0,4
+	ppmPic *rLeft;
+	rLeft = malloc(sizeof(ppmPic));
+	rLeft->rows = thePic->cols;
+	rLeft->cols = thePic->rows;
+	rLeft->colors = thePic->colors;
+	rLeft->pixels = malloc(sizeof(Pixel *) * rLeft->rows);
+	for(int i = 0; i < rLeft->rows; i++){
+		rLeft->pixels[i] = malloc(sizeof(Pixel) * rLeft->cols);
+	}
+	for(int a = 0; a < rLeft->rows; a++){
+		for(int b = 0; b < rLeft->cols; b++){
+			//printf("moving from %d %d to %d %d\n", b,a, a,b );
+			rLeft->pixels[rLeft->rows - 1 - a][b].red = thePic->pixels[b][a].red;
+			rLeft->pixels[rLeft->rows - 1 - a][b].green = thePic->pixels[b][a].green;
+			rLeft->pixels[rLeft->rows - 1 - a][b].blue = thePic->pixels[b][a].blue;
+		}
+	}
+	return rLeft;
+}
+//fixed
+ppmPic *rotateRight(ppmPic *thePic) {
+	// reverse dimension sizes and 0,0 becomes 4,0
+	ppmPic *rRight;
+	rRight = malloc(sizeof(ppmPic));
+	rRight->rows = thePic->cols;
+	rRight->cols = thePic->rows;
+	rRight->colors = thePic->colors;
+	rRight->pixels = malloc(sizeof(Pixel *) * rRight->rows);
+	for(int i = 0; i < rRight->rows; i++){
+		rRight->pixels[i] = malloc(sizeof(Pixel) * rRight->cols);
+	}
+	for(int a = 0; a < rRight->rows; a++){
+		for(int b = 0; b < rRight->cols; b++){
+			rRight->pixels[a][rRight->cols - 1 - b].red = thePic->pixels[b][a].red;
+			rRight->pixels[a][rRight->cols - 1 - b].green = thePic->pixels[b][a].green;
+			rRight->pixels[a][rRight->cols - 1 - b].blue = thePic->pixels[b][a].blue;
+		}
+	}
+
+	return rRight;
+}
+//fixed
+ppmPic *flipHorizontal(ppmPic *thePic) {
+	// invert the location at the column position
+	ppmPic *flipHoriz;
+	flipHoriz = malloc(sizeof(ppmPic));
+	flipHoriz->rows = thePic->rows;
+	flipHoriz->cols = thePic->cols;
+	flipHoriz->colors = thePic->colors;
+	flipHoriz->pixels = malloc(sizeof(Pixel *) *flipHoriz->rows);
+	for(int i = 0; i < flipHoriz->rows; i++){
+		flipHoriz->pixels[i] = malloc(sizeof(Pixel) * flipHoriz->cols);
+	}
+
+	for(int a = 0; a < flipHoriz->rows; a++){
+		for(int b = 0; b < flipHoriz->cols; b++){
+			flipHoriz->pixels[a][flipHoriz->cols -1 - b].red = thePic->pixels[a][b].red;
+			flipHoriz->pixels[a][flipHoriz->cols -1 - b].green = thePic->pixels[a][b].green;
+			flipHoriz->pixels[a][flipHoriz->cols -1 - b].blue = thePic->pixels[a][b].blue;
+		}
+	}
+
+	return flipHoriz;
+}
+//fixed
+ppmPic *flipVertical(ppmPic *thePic) {
+	// ivert the position at the rows location
+	ppmPic *flipVert;
+	flipVert = malloc(sizeof(ppmPic));
+	flipVert->rows = thePic->rows;
+	flipVert->cols = thePic->cols;
+	flipVert->colors = thePic->colors;
+	flipVert->pixels = malloc(sizeof(Pixel *) *flipVert->rows);
+	for(int i = 0; i < flipVert->rows; i++){
+		flipVert->pixels[i] = malloc(sizeof(Pixel) * flipVert->cols);
+	}
+
+	for(int a = 0; a < flipVert->rows; a++){
+		for(int b = 0; b < flipVert->cols; b++){
+			flipVert->pixels[flipVert->rows - 1 - a][b].red = thePic->pixels[a][b].red;
+			flipVert->pixels[flipVert->rows - 1 - a][b].green = thePic->pixels[a][b].green;
+			flipVert->pixels[flipVert->rows - 1 - a][b].blue = thePic->pixels[a][b].blue;
+		}
+	}
+
+	return flipVert;
+}
+//fixed
+ppmPic *invert(ppmPic *thePic) {
+	// subract the color values from the max color value
+	ppmPic *flipVert;
+	flipVert = malloc(sizeof(ppmPic));
+	flipVert->rows = thePic->rows;
+	flipVert->cols = thePic->cols;
+	flipVert->colors = thePic->colors;
+	flipVert->pixels = malloc(sizeof(Pixel *) *flipVert->rows);
+	for(int i = 0; i < flipVert->rows; i++){
+		flipVert->pixels[i] = malloc(sizeof(Pixel) * flipVert->cols);
+	}
+
+	for(int a = 0; a < flipVert->rows; a++){
+		for(int b = 0; b < flipVert->cols; b++){
+			flipVert->pixels[a][b].red =abs(thePic->pixels[a][b].red - flipVert->rows - 1);
+			flipVert->pixels[a][b].green = abs(thePic->pixels[a][b].green - flipVert->rows - 1);
+			flipVert->pixels[a][b].blue = abs(thePic->pixels[a][b].blue - flipVert->rows - 1);
+		}
+	}
+
+	return flipVert;
+}
+//fixed
+ppmPic *duplicate(ppmPic *thePic) {
+	// copy paste. bleh.
+	ppmPic *duplicatePic = NULL;
+	duplicatePic = malloc(sizeof(ppmPic));
+	duplicatePic->rows = thePic->rows;
+	duplicatePic->cols = thePic->cols;
+	duplicatePic->colors = thePic->colors;
+
+	duplicatePic->pixels = malloc(sizeof(Pixel *) * duplicatePic->rows);
+	for(int i = 0; i < duplicatePic->rows; i++){
+		duplicatePic->pixels[i] = malloc(sizeof(Pixel) * duplicatePic->cols);
+	}
+	for(int a = 0; a < duplicatePic->rows; a++){
+		for(int b = 0; b < duplicatePic->cols; b++){
+			duplicatePic->pixels[a][b].red = thePic->pixels[a][b].red;
+			duplicatePic->pixels[a][b].green = thePic->pixels[a][b].green;
+			duplicatePic->pixels[a][b].blue = thePic->pixels[a][b].blue;
+		}
+	}
+	return duplicatePic;
+}
+//fixed
